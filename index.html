@@ -313,16 +313,19 @@
         }
 
         // ============================================================
-        // 3. 主题色提取
+        // 3. 主题色提取（含滚动条颜色 + 列表图标）
         // ============================================================
         function extractColorFromCover(coverUrl) {
+            // 如果无封面，恢复默认配色
             if (!coverUrl) {
-                // 无封面，恢复默认配色
                 document.body.style.background = 'linear-gradient(135deg, #1a1a2e, #16213e)';
                 mainContainer.style.background = 'rgba(255, 255, 255, 0.05)';
                 mainContainer.style.backdropFilter = 'blur(20px)';
-                // 恢复按钮默认色（索引样式已定义）
                 document.querySelector('.play-btn').style.background = '#7c5cfc';
+                document.querySelector('.play-btn').style.boxShadow = '0 5px 20px rgba(124, 92, 252, 0.4)';
+                // 移除动态样式（恢复默认滚动条和图标颜色）
+                const oldStyle = document.getElementById('dynamic-theme');
+                if (oldStyle) oldStyle.remove();
                 return;
             }
 
@@ -346,9 +349,10 @@
                     document.querySelector('.play-btn').style.background = `rgb(${r},${g},${b})`;
                     document.querySelector('.play-btn').style.boxShadow = `0 5px 20px rgba(${r},${g},${b},0.4)`;
 
-                    // 4. 进度条滑块颜色
+                    // 4. 动态样式（进度条滑块 + 歌单高亮 + 滚动条 + 列表图标）
                     const style = document.createElement('style');
                     style.textContent = `
+                        /* 进度条滑块 */
                         #progress-bar::-webkit-slider-thumb {
                             background: rgb(${r},${g},${b}) !important;
                             box-shadow: 0 0 15px rgba(${r},${g},${b},0.6) !important;
@@ -357,12 +361,24 @@
                             background: rgb(${r},${g},${b}) !important;
                             box-shadow: 0 0 15px rgba(${r},${g},${b},0.6) !important;
                         }
+                        /* 歌单高亮 */
                         #playlist-ul li.active {
                             background: rgba(${r},${g},${b},0.2) !important;
                             border-left-color: rgb(${r},${g},${b}) !important;
                         }
+                        /* 歌单滚动条（WebKit 浏览器） */
                         #playlist-ul::-webkit-scrollbar-thumb {
                             background: rgb(${r},${g},${b}) !important;
+                            border-radius: 10px;
+                        }
+                        /* 歌单滚动条（Firefox） */
+                        #playlist-ul {
+                            scrollbar-color: rgb(${r},${g},${b}) rgba(255,255,255,0.1);
+                            scrollbar-width: thin;
+                        }
+                        /* 播放列表标题图标 */
+                        .playlist h3 i {
+                            color: rgb(${r},${g},${b}) !important;
                         }
                     `;
                     // 移除旧的动态样式
@@ -377,10 +393,11 @@
             };
             img.onerror = function() {
                 console.warn('封面图片加载失败，无法提取颜色');
+                // 无封面时恢复默认
+                extractColorFromCover(null);
             };
             img.src = coverUrl;
         }
-
         // ============================================================
         // 4. 加载歌曲
         // ============================================================
